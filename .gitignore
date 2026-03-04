@@ -1,0 +1,159 @@
+# ═══════════════════════════════════════════════════════════
+# .gitignore - Formulario de Requerimientos
+# ═══════════════════════════════════════════════════════════
+
+# ─────────────────────────────────────
+# Variables de Entorno (¡MUY IMPORTANTE!)
+# ─────────────────────────────────────
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+
+# API Keys y secretos
+*.key
+*.pem
+*.cert
+secrets/
+
+# ─────────────────────────────────────
+# Node.js
+# ─────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ─────────────────────────────────────
+# Build Outputs
+# ─────────────────────────────────────
+dist/
+dist-ssr/
+build/
+.cache/
+*.local
+
+# ─────────────────────────────────────
+# Vercel
+# ─────────────────────────────────────
+.vercel
+.vercel.json
+.vercel/**/*
+
+# ─────────────────────────────────────
+# Editor / IDE
+# ─────────────────────────────────────
+
+# VS Code
+.vscode/
+!.vscode/extensions.json
+*.code-workspace
+
+# WebStorm / IntelliJ
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# ─────────────────────────────────────
+# Sistema Operativo
+# ─────────────────────────────────────
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# ─────────────────────────────────────
+# Testing
+# ─────────────────────────────────────
+coverage/
+.nyc_output/
+*.lcov
+*.log
+
+# ─────────────────────────────────────
+# Temporal / Cache
+# ─────────────────────────────────────
+.temp/
+.tmp/
+*.tmp
+*.bak
+*.backup
+*.old
+
+# ─────────────────────────────────────
+# TypeScript
+# ─────────────────────────────────────
+*.tsbuildinfo
+
+# ─────────────────────────────────────
+# Logs
+# ─────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ─────────────────────────────────────
+# Misc
+# ─────────────────────────────────────
+*.pdf
+*.zip
+*.tar.gz
+*.rar
+
+# ─────────────────────────────────────
+# NOTAS IMPORTANTES
+# ─────────────────────────────────────
+# 
+# Este .gitignore está configurado para:
+# 1. ❌ NO subir variables de entorno (.env*)
+# 2. ❌ NO subir node_modules
+# 3. ❌ NO subir builds de producción (dist/)
+# 4. ❌ NO subir configuraciones de Vercel
+# 5. ❌ NO subir archivos del sistema operativo
+# 6. ❌ NO subir archivos de editores/IDEs
+#
+# IMPORTANTE:
+# - Nunca remuevas .env* de este archivo
+# - Las API keys NUNCA deben ir en Git
+# - Para producción, usa variables de entorno en Vercel
+# - Comparte .env.local.example (sin datos sensibles)
+#
+# ═══════════════════════════════════════════════════════════
