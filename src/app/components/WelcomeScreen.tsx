@@ -59,9 +59,9 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
           className="text-white mb-5"
           style={{ fontSize: '2.4rem', fontWeight: 700, lineHeight: 1.2 }}
         >
-          Cuéntanos cual es tu{' '}
+          Cuéntanos ¿cuál es tu{' '}
           <span className="text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(90deg, #F2D230, #D99414)' }}>
-            necesidad
+            necesidad?
           </span>
         </motion.h1>
 

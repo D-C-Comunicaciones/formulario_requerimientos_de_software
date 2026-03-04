@@ -378,70 +378,230 @@ function buildHTML(fd: FormData, logoDataUrl: string): string {
 </html>`;
 }
 
-function addFallbackPdfContent(pdf: import('jspdf').jsPDF, formData: FormData) {
+type PdfSection = {
+  title: string;
+  rows: Array<[string, string]>;
+};
+
+function toDisplayValue(value?: string): string {
+  return value && value.trim() ? value.trim() : 'No especificado';
+}
+
+async function loadLogoData(): Promise<{ dataUrl: string; format: 'PNG' | 'JPEG' | 'WEBP'; ratio: number } | null> {
+  try {
+    const response = await fetch('/img/logo-horizontal.png', { cache: 'no-store' });
+    if (!response.ok) return null;
+
+    const blob = await response.blob();
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+
+    const format: 'PNG' | 'JPEG' | 'WEBP' = blob.type.includes('jpeg') || blob.type.includes('jpg')
+      ? 'JPEG'
+      : blob.type.includes('webp')
+        ? 'WEBP'
+        : 'PNG';
+
+    const ratio = await new Promise<number>((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve(img.naturalWidth > 0 && img.naturalHeight > 0 ? img.naturalWidth / img.naturalHeight : 3.2);
+      img.onerror = () => resolve(3.2);
+      img.src = dataUrl;
+    });
+
+    return { dataUrl, format, ratio };
+  } catch {
+    return null;
+  }
+}
+
+function drawHeader(
+  pdf: import('jspdf').jsPDF,
+  projectName: string,
+  generatedAt: string,
+  logo: { dataUrl: string; format: 'PNG' | 'JPEG' | 'WEBP'; ratio: number } | null,
+) {
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const margin = 12;
+
+  if (logo) {
+    const targetWidth = 56;
+    const targetHeight = Math.max(10, Math.min(20, targetWidth / logo.ratio));
+    pdf.addImage(logo.dataUrl, logo.format, margin, 8, targetWidth, targetHeight);
+  }
+
+  const rightX = pageWidth - margin;
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(14);
+  pdf.text('Formulario de Requerimientos de Software', rightX, 12, { align: 'right' });
+
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(10);
+  pdf.text(projectName, rightX, 17, { align: 'right' });
+  pdf.text(`Generado: ${generatedAt}`, rightX, 22, { align: 'right' });
+
+  pdf.setDrawColor(0, 0, 0);
+  pdf.setLineWidth(0.4);
+  pdf.line(margin, 26, pageWidth - margin, 26);
+}
+
+function addStructuredPdfContent(
+  pdf: import('jspdf').jsPDF,
+  formData: FormData,
+  logo: { dataUrl: string; format: 'PNG' | 'JPEG' | 'WEBP'; ratio: number } | null,
+) {
   const countryName = formData.country ? getCountryName(formData.country) : '';
   const location = countryName && formData.city
     ? `${countryName}, ${formData.city}`
     : formData.city || countryName || 'No especificado';
 
-  const lines: Array<[string, string]> = [
-    ['Nombre', formData.fullName || 'No especificado'],
-    ['Empresa', formData.company || 'No especificado'],
-    ['Correo', formData.email || 'No especificado'],
-    ['Teléfono', formData.phone || 'No especificado'],
-    ['Ubicación', location],
-    ['Contacto preferido', formData.preferredContact || 'No especificado'],
-    ['Fecha ideal', formData.launchDate || 'No especificado'],
-    ['Presupuesto', formData.budgetRange || 'No especificado'],
+  const functionalitiesRows = formData.functionalities.length
+    ? formData.functionalities.map((item, index) => ([
+        `Funcionalidad ${index + 1}`,
+        [
+          `Nombre: ${toDisplayValue(item.name)}`,
+          `Descripción: ${toDisplayValue(item.description)}`,
+          `Propósito: ${toDisplayValue(item.purpose)}`,
+          `Prioridad: ${toDisplayValue(item.priority)}`,
+          `Indispensable: ${item.isEssential ? 'Sí' : 'No'}`,
+        ].join('\n'),
+      ] as [string, string]))
+    : [['Funcionalidades', 'No se especificaron funcionalidades.'] as [string, string]];
+
+  const referencesRows = formData.references.length
+    ? formData.references
+        .filter((item) => item.url || item.description)
+        .map((item, index) => ([
+          `Referencia ${index + 1}`,
+          [
+            `URL: ${toDisplayValue(item.url)}`,
+            `Descripción: ${toDisplayValue(item.description)}`,
+          ].join('\n'),
+        ] as [string, string]))
+    : [['Referencias', 'No se especificaron referencias.'] as [string, string]];
+
+  const sections: PdfSection[] = [
+    {
+      title: '1. Información General',
+      rows: [
+        ['Nombre completo', toDisplayValue(formData.fullName)],
+        ['Empresa', toDisplayValue(formData.company)],
+        ['Correo', toDisplayValue(formData.email)],
+        ['Teléfono', toDisplayValue(formData.phone)],
+        ['Ubicación', toDisplayValue(location)],
+        ['Dirección', toDisplayValue(formData.address)],
+        ['Contacto preferido', toDisplayValue(formData.preferredContact)],
+      ],
+    },
+    {
+      title: '2. Problema o Necesidad',
+      rows: [
+        ['Situación actual', toDisplayValue(formData.currentSituation)],
+        ['Mejora deseada', toDisplayValue(formData.desiredImprovement)],
+        ['Proceso actual', toDisplayValue(formData.currentProcess)],
+        ['Dificultades', toDisplayValue(formData.difficulties)],
+      ],
+    },
+    {
+      title: '3. Objetivo',
+      rows: [
+        ['Resultado esperado', toDisplayValue(formData.desiredResult)],
+        ['Criterio de éxito', toDisplayValue(formData.successCriteria)],
+      ],
+    },
+    {
+      title: '4. Funcionalidades',
+      rows: functionalitiesRows,
+    },
+    {
+      title: '5. Usuarios',
+      rows: [
+        ['Tipos de usuario', toDisplayValue(formData.userTypes)],
+        ['Cantidad de usuarios', toDisplayValue(formData.userCount)],
+        ['Descripción del usuario', toDisplayValue(formData.userDescription)],
+      ],
+    },
+    {
+      title: '6. Referencias',
+      rows: referencesRows,
+    },
+    {
+      title: '7. Presupuesto y Tiempos',
+      rows: [
+        ['Fecha ideal de lanzamiento', toDisplayValue(formData.launchDate)],
+        ['Rango de inversión', toDisplayValue(formData.budgetRange)],
+      ],
+    },
   ];
 
-  pdf.setFont('helvetica', 'bold');
-  pdf.setFontSize(16);
-  pdf.text('Documento de Requerimientos de Software', 14, 16);
+  const projectName = toDisplayValue(formData.company || formData.fullName || 'Proyecto de Software');
+  const generatedAt = new Date().toLocaleString('es-ES');
 
-  pdf.setFont('helvetica', 'normal');
-  pdf.setFontSize(10);
-  pdf.text(`Generado: ${new Date().toLocaleString('es-ES')}`, 14, 22);
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const margin = 12;
+  const bottomLimit = pageHeight - 12;
+  const leftColWidth = 56;
+  const rightColWidth = pageWidth - margin * 2 - leftColWidth;
+
+  drawHeader(pdf, projectName, generatedAt, logo);
 
   let y = 32;
-  pdf.setFontSize(11);
 
-  lines.forEach(([label, value]) => {
-    if (y > 275) {
+  const drawSectionTitle = (title: string) => {
+    const titleHeight = 8;
+    if (y + titleHeight > bottomLimit) {
       pdf.addPage();
-      y = 20;
+      drawHeader(pdf, projectName, generatedAt, logo);
+      y = 32;
     }
 
+    pdf.setDrawColor(0, 0, 0);
+    pdf.setLineWidth(0.35);
+    pdf.rect(margin, y, pageWidth - margin * 2, titleHeight);
     pdf.setFont('helvetica', 'bold');
-    pdf.text(`${label}:`, 14, y);
-    pdf.setFont('helvetica', 'normal');
-
-    const wrapped = pdf.splitTextToSize(value, 170);
-    pdf.text(wrapped, 55, y);
-    y += Math.max(7, wrapped.length * 5);
-  });
-
-  const block = (title: string, value: string) => {
-    if (!value?.trim()) return;
-    if (y > 260) {
-      pdf.addPage();
-      y = 20;
-    }
-    pdf.setFont('helvetica', 'bold');
-    pdf.text(title, 14, y);
-    y += 6;
-    pdf.setFont('helvetica', 'normal');
-    const wrapped = pdf.splitTextToSize(value, 180);
-    pdf.text(wrapped, 14, y);
-    y += wrapped.length * 5 + 4;
+    pdf.setFontSize(11);
+    pdf.text(title, margin + 2, y + 5.5);
+    y += titleHeight;
   };
 
-  block('Situación actual', formData.currentSituation);
-  block('Mejora deseada', formData.desiredImprovement);
-  block('Proceso actual', formData.currentProcess);
-  block('Dificultades', formData.difficulties);
-  block('Resultado esperado', formData.desiredResult);
-  block('Criterio de éxito', formData.successCriteria);
+  const drawRow = (label: string, value: string) => {
+    const labelLines = pdf.splitTextToSize(label, leftColWidth - 4);
+    const valueLines = pdf.splitTextToSize(value, rightColWidth - 4);
+    const maxLines = Math.max(labelLines.length, valueLines.length, 1);
+    const rowHeight = Math.max(8, maxLines * 4.8 + 2);
+
+    if (y + rowHeight > bottomLimit) {
+      pdf.addPage();
+      drawHeader(pdf, projectName, generatedAt, logo);
+      y = 32;
+    }
+
+    pdf.setDrawColor(0, 0, 0);
+    pdf.setLineWidth(0.3);
+    pdf.rect(margin, y, leftColWidth, rowHeight);
+    pdf.rect(margin + leftColWidth, y, rightColWidth, rowHeight);
+
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(9.5);
+    pdf.text(labelLines, margin + 2, y + 5);
+
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(9.5);
+    pdf.text(valueLines, margin + leftColWidth + 2, y + 5);
+
+    y += rowHeight;
+  };
+
+  sections.forEach((section) => {
+    drawSectionTitle(section.title);
+    section.rows.forEach(([label, value]) => drawRow(label, value));
+    y += 4;
+  });
 }
 
 /**
@@ -456,7 +616,8 @@ export async function generatePDF(formData: FormData): Promise<Blob> {
     orientation: 'portrait',
   });
 
-  addFallbackPdfContent(pdf, formData);
+  const logo = await loadLogoData();
+  addStructuredPdfContent(pdf, formData, logo);
   return pdf.output('blob');
 }
 
@@ -469,7 +630,7 @@ export function downloadPDF(blob: Blob, _filename?: string) {
   if (!win) {
     const a    = document.createElement('a');
     a.href     = url;
-    a.download = _filename ?? 'requerimientos-software.html';
+    a.download = _filename ?? 'requerimientos-software.pdf';
     a.click();
   }
 }
