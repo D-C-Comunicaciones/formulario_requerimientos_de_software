@@ -125,21 +125,19 @@ export default async function handler(
     });
   }
 
-  // Validar origen de la petición
-  const originCheck = isAllowedOrigin(req);
-
-  if (!originCheck) {
-    console.error('🚨 VALIDACIÓN DE ORIGEN FALLÓ:');
-    console.error(`   Origen recibido: ${req.headers.origin || req.headers.referer || 'NINGUNO'}`);
-    console.error(`   Orígenes permitidos: ${getAllowedOrigins().join(', ')}`);
-    console.error(`   APP_URL env: ${process.env.APP_URL || 'NO CONFIGURADA'}`);
-    console.error(`   VERCEL_URL env: ${process.env.VERCEL_URL || 'NO CONFIGURADA'}`);
-
-    return res.status(403).json({
-      success: false,
-      message: 'Acceso denegado: origen no autorizado',
-    });
-  }
+  // VALIDACIÓN DE ORIGEN DESHABILITADA TEMPORALMENTE
+  // const originCheck = isAllowedOrigin(req);
+  // if (!originCheck) {
+  //   console.error('🚨 VALIDACIÓN DE ORIGEN FALLÓ:');
+  //   console.error(`   Origen recibido: ${req.headers.origin || req.headers.referer || 'NINGUNO'}`);
+  //   console.error(`   Orígenes permitidos: ${getAllowedOrigins().join(', ')}`);
+  //   console.error(`   APP_URL env: ${process.env.APP_URL || 'NO CONFIGURADA'}`);
+  //   console.error(`   VERCEL_URL env: ${process.env.VERCEL_URL || 'NO CONFIGURADA'}`);
+  //   return res.status(403).json({
+  //     success: false,
+  //     message: 'Acceso denegado: origen no autorizado',
+  //   });
+  // }
 
   try {
     // Obtener IP del cliente
