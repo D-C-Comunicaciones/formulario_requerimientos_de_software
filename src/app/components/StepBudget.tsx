@@ -1,7 +1,7 @@
 import type { FormData } from '@/types/form';
 import { StepLayout, Field, inputCls } from './StepLayout';
 import { CalendarIcon, DollarSignIcon } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import { SearchableSelect } from './SearchableSelect';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Calendar } from './ui/calendar';
@@ -60,6 +60,7 @@ export function StepBudget({ data, onChange, onNext, onBack }: Props) {
     BUDGET_RANGES.includes(data.budgetRange) ? '' : extractDigits(data.budgetRange)
   );
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const customBudgetInputRef = useRef<HTMLInputElement>(null);
 
   const selectedBudgetOption = useMemo(() => {
     if (!data.budgetRange) return '';
@@ -71,14 +72,22 @@ export function StepBudget({ data, onChange, onNext, onBack }: Props) {
     [data.launchDate]
   );
 
+  // Enfocar automáticamente el input cuando se selecciona "Otro"
+  useEffect(() => {
+    if (selectedBudgetOption === OTHER_BUDGET_OPTION && customBudgetInputRef.current) {
+      setTimeout(() => customBudgetInputRef.current?.focus(), 100);
+    }
+  }, [selectedBudgetOption]);
+
   const set = (key: keyof FormData) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
       onChange({ [key]: e.target.value });
 
   const onBudgetOptionChange = (option: string) => {
     if (option === OTHER_BUDGET_OPTION) {
+      // Guardar "Otro" como marcador temporal para que se muestre el input
       const formatted = formatCopFromDigits(customBudgetDigits);
-      onChange({ budgetRange: formatted || '' });
+      onChange({ budgetRange: formatted || OTHER_BUDGET_OPTION });
       return;
     }
 
@@ -93,8 +102,9 @@ export function StepBudget({ data, onChange, onNext, onBack }: Props) {
   };
 
   const handleNext = () => {
-    if (selectedBudgetOption === OTHER_BUDGET_OPTION && !customBudgetDigits) {
-      alert('Si seleccionas "Otro", digita tu presupuesto en pesos sin puntos ni signos.');
+    // Si seleccionó "Otro" pero no ha ingresado un valor personalizado
+    if (data.budgetRange === OTHER_BUDGET_OPTION || (selectedBudgetOption === OTHER_BUDGET_OPTION && !customBudgetDigits)) {
+      alert('Por favor, ingresa tu presupuesto en pesos (solo números, sin puntos ni signos).');
       return;
     }
     onNext();
@@ -168,19 +178,25 @@ export function StepBudget({ data, onChange, onNext, onBack }: Props) {
         </div>
 
         {selectedBudgetOption === OTHER_BUDGET_OPTION && (
-          <input
-            className={`${inputCls} mt-3`}
-            inputMode="numeric"
-            pattern="[0-9]*"
-            placeholder="digite su presupuesto en pesos sin puntos ni signos"
-            value={customBudgetDigits}
-            onChange={(e) => onCustomBudgetChange(e.target.value)}
-          />
+          <div className="mt-3">
+            <input
+              ref={customBudgetInputRef}
+              className={inputCls}
+              inputMode="numeric"
+              pattern="[0-9]*"
+              placeholder="Ej: 25000000"
+              value={customBudgetDigits}
+              onChange={(e) => onCustomBudgetChange(e.target.value)}
+            />
+            <p className="text-xs text-gray-500 mt-2">
+              💡 Ingresa solo números sin puntos ni comas. Ej: <span className="font-mono">25000000</span> para $ 25.000.000 COP
+            </p>
+          </div>
         )}
 
         {selectedBudgetOption === OTHER_BUDGET_OPTION && customBudgetDigits && (
-          <p className="text-xs text-gray-500 mt-2">
-            Valor registrado: <strong>{formatCopFromDigits(customBudgetDigits)} COP</strong>
+          <p className="text-sm text-green-600 mt-2 font-medium">
+            ✓ Valor registrado: <strong>{formatCopFromDigits(customBudgetDigits)} COP</strong>
           </p>
         )}
       </Field>

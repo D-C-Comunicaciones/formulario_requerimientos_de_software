@@ -77,14 +77,19 @@ export function ConfirmationScreen({ pdfBlob, clientEmail, emailStatus, onRestar
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
-            className="w-24 h-24 rounded-full flex items-center justify-center shadow-2xl" style={{ background: '#044D8C', boxShadow: '0 20px 40px rgba(4,77,140,0.4)' }}
+            className="w-24 h-24 rounded-full flex items-center justify-center shadow-2xl"
+            style={{
+              background: '#ffffff',
+              border: '4px solid #10B981',
+              boxShadow: '0 20px 40px rgba(16,185,129,0.3)'
+            }}
           >
             <motion.div
               initial={{ pathLength: 0, opacity: 0 }}
               animate={{ pathLength: 1, opacity: 1 }}
               transition={{ delay: 0.4, duration: 0.6, ease: 'easeOut' }}
             >
-              <CheckIcon size={44} className="text-white" strokeWidth={3} />
+              <CheckIcon size={44} className="text-green-500" strokeWidth={3} />
             </motion.div>
           </motion.div>
 
@@ -93,13 +98,13 @@ export function ConfirmationScreen({ pdfBlob, clientEmail, emailStatus, onRestar
             initial={{ scale: 1, opacity: 0.5 }}
             animate={{ scale: 2.2, opacity: 0 }}
             transition={{ delay: 0.2, duration: 1.2, ease: 'easeOut' }}
-            className="absolute w-24 h-24 rounded-full border-2" style={{ borderColor: '#F2D230' }}
+            className="absolute w-24 h-24 rounded-full border-2" style={{ borderColor: '#10B981' }}
           />
           <motion.div
             initial={{ scale: 1, opacity: 0.3 }}
             animate={{ scale: 3, opacity: 0 }}
             transition={{ delay: 0.4, duration: 1.4, ease: 'easeOut' }}
-            className="absolute w-24 h-24 rounded-full border-2" style={{ borderColor: '#D9AA1E' }}
+            className="absolute w-24 h-24 rounded-full border-2" style={{ borderColor: '#10B981' }}
           />
         </div>
 

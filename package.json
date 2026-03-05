@@ -5,8 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "dev": "vite",
-    "email:dev": "email dev --dir src/app/components/emails"
+    "dev": "vite"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",

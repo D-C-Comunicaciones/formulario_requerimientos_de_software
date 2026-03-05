@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Resend } from 'resend';
 import { buildAdminEmailHtml, buildClientEmailHtml } from './emailTemplates.js';
+import { verifyToken } from './validate-access.js';
 
 // Inicializar Resend
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -98,6 +99,23 @@ export default async function handler(
       });
     }
 
+    // ─── VERIFICAR TOKEN DE ACCESO ───
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        success: false,
+        message: 'Token de acceso requerido',
+      });
+    }
+
+    const token = authHeader.slice(7); // Remover 'Bearer '
+    if (!verifyToken(token)) {
+      return res.status(401).json({
+        success: false,
+        message: 'Token de acceso inválido o expirado',
+      });
+    }
+
     // Verificar que el body existe
     if (!req.body || typeof req.body !== 'object') {
       console.error('❌ Body no válido:', req.body);
@@ -108,8 +126,8 @@ export default async function handler(
     }
 
     // Extraer datos del body
-    const { clientEmail, clientName, pdfBase64 } = req.body;
-    
+    const { clientEmail, clientName, pdfBase64, company } = req.body;
+
     // Log para debug (sin datos sensibles)
     console.log('📧 Datos recibidos:', {
       hasEmail: !!clientEmail,
@@ -152,6 +170,7 @@ export default async function handler(
     // ─── SANITIZAR STRINGS ───
     const trimmedEmail = clientEmail.trim();
     const trimmedName = clientName.trim();
+    const trimmedCompany = (company && typeof company === 'string') ? company.trim() : '';
 
     // Validar que no estén vacíos después de trim
     if (!trimmedEmail || !trimmedName) {
@@ -201,18 +220,33 @@ export default async function handler(
     }
 
     const senderEmail = process.env.SENDER_EMAIL || 'onboarding@resend.dev';
-    const senderName = process.env.SENDER_NAME || 'Formulario de Requerimientos';
+    const senderName = process.env.SENDER_NAME || 'Formulario de Requerimientos de Software';
     const adminEmail = process.env.ADMIN_EMAIL;
 
-    // ─── PREPARAR FECHA ───
+    // ─── PREPARAR FECHA EN HORARIO DE COLOMBIA ───
     const now = new Date();
-    const submittedAt = now.toLocaleString('es-ES', {
+    const submittedAt = now.toLocaleString('es-CO', {
+      timeZone: 'America/Bogota',
       year: 'numeric',
       month: 'long',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
     });
+
+    // Formato de fecha para nombres de archivo (YYYY-MM-DD)
+    const fileDate = now.toLocaleString('es-CO', {
+      timeZone: 'America/Bogota',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).split('/').reverse().join('-');
+
+    // Nombre de empresa sanitizado para archivo (sin caracteres especiales)
+    const safeCompanyName = (trimmedCompany || 'Sin_Empresa')
+      .replace(/[^a-zA-Z0-9áéíóúñÁÉÍÓÚÑ\s]/g, '')
+      .replace(/\s+/g, '_')
+      .substring(0, 50);
 
     // ─── LIMPIAR BASE64 ───
     const cleanBase64 = pdfBase64.replace(/^data:.*?;base64,/, '');
@@ -242,7 +276,7 @@ export default async function handler(
       html: clientEmailHtml,
       attachments: [
         {
-          filename: 'requerimientos.pdf',
+          filename: `requerimientos_${safeCompanyName}_${fileDate}.pdf`,
           content: cleanBase64,
         },
       ],
@@ -258,11 +292,11 @@ export default async function handler(
       const adminEmailResult = await resend.emails.send({
         from: `${senderName} <${senderEmail}>`,
         to: adminEmail,
-        subject: `📋 Nuevo formulario de ${trimmedName}`,
+        subject: `📋 Formulario de Requerimientos de Software - ${trimmedName} - ${trimmedCompany}`,
         html: adminEmailHtml,
         attachments: [
           {
-            filename: 'requerimientos.pdf',
+            filename: `requerimientos_${safeCompanyName}_${fileDate}.pdf`,
             content: cleanBase64,
           },
         ],

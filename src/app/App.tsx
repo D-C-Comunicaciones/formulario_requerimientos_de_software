@@ -6,26 +6,29 @@ import type { FormData } from '@/types/form';
 import { initialFormData } from '@/types/form';
 import { generatePDF } from '@utils/pdfGenerator';
 import { sendFormEmail } from '@utils/emailService';
+import { hasValidAccess } from '@utils/accessService';
 
-import { ProgressBar }         from './components/ProgressBar';
-import { WelcomeScreen }       from './components/WelcomeScreen';
-import { StepGeneralInfo }     from './components/StepGeneralInfo';
-import { StepProblem }         from './components/StepProblem';
-import { StepObjective }       from './components/StepObjective';
+import { AccessCodeScreen } from './components/AccessCodeScreen';
+import { ProgressBar } from './components/ProgressBar';
+import { WelcomeScreen } from './components/WelcomeScreen';
+import { StepGeneralInfo } from './components/StepGeneralInfo';
+import { StepProblem } from './components/StepProblem';
+import { StepObjective } from './components/StepObjective';
 import { StepFunctionalities } from './components/StepFunctionalities';
-import { StepUsers }           from './components/StepUsers';
-import { StepReferences }      from './components/StepReferences';
-import { StepBudget }          from './components/StepBudget';
-import { StepReview }          from './components/StepReview';
-import { ConfirmationScreen }  from './components/ConfirmationScreen';
+import { StepUsers } from './components/StepUsers';
+import { StepReferences } from './components/StepReferences';
+import { StepBudget } from './components/StepBudget';
+import { StepReview } from './components/StepReview';
+import { ConfirmationScreen } from './components/ConfirmationScreen';
 
 const TOTAL_STEPS = 8;
 
 export default function App() {
+  const [hasAccess, setHasAccess] = useState(hasValidAccess());
   const [currentStep, setCurrentStep] = useState(0); // 0=welcome, 1-8=form, 9=confirmation
-  const [formData, setFormData]       = useState<FormData>(initialFormData);
-  const [isLoading, setIsLoading]     = useState(false);
-  const [pdfBlob, setPdfBlob]         = useState<Blob | null>(null);
+  const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [isLoading, setIsLoading] = useState(false);
+  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
   const [emailStatus, setEmailStatus] = useState<'sent' | 'failed' | 'pending'>('pending');
 
   const update = (updates: Partial<FormData>) =>
@@ -46,8 +49,9 @@ export default function App() {
       try {
         const emailResult = await sendFormEmail({
           clientEmail: formData.email,
-          clientName:  formData.fullName,
-          pdfBlob:     blob,
+          clientName: formData.fullName,
+          company: formData.company,
+          pdfBlob: blob,
         });
 
         if (emailResult.success) {
@@ -82,6 +86,16 @@ export default function App() {
     setPdfBlob(null);
     setEmailStatus('pending');
   };
+
+  /* ── ACCESS CONTROL ── */
+  if (!hasAccess) {
+    return (
+      <>
+        <AccessCodeScreen onAccessGranted={() => setHasAccess(true)} />
+        <Toaster position="bottom-center" richColors />
+      </>
+    );
+  }
 
   /* ── WELCOME ── */
   if (currentStep === 0) {

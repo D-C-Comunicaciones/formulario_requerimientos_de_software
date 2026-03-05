@@ -16,10 +16,12 @@
  */
 
 import { env, getApiUrl } from '@config/env';
+import { getAccessToken } from './accessService';
 
 export interface EmailPayload {
   clientEmail: string;
   clientName: string;
+  company?: string;
   pdfBlob: Blob;
 }
 
@@ -52,6 +54,12 @@ function blobToBase64(blob: Blob): Promise<string> {
  */
 export async function sendFormEmail(payload: EmailPayload): Promise<EmailResult> {
   try {
+    // Obtener token de acceso
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error('No tienes acceso autorizado. Por favor recarga la página y vuelve a ingresar tu código.');
+    }
+
     // Convertir el PDF blob a base64
     const pdfBase64 = await blobToBase64(payload.pdfBlob);
 
@@ -65,10 +73,12 @@ export async function sendFormEmail(payload: EmailPayload): Promise<EmailResult>
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
       },
       body: JSON.stringify({
         clientEmail: payload.clientEmail,
         clientName: payload.clientName,
+        company: payload.company,
         pdfBase64,
       }),
     });
@@ -83,10 +93,12 @@ export async function sendFormEmail(payload: EmailPayload): Promise<EmailResult>
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
           },
           body: JSON.stringify({
             clientEmail: payload.clientEmail,
             clientName: payload.clientName,
+            company: payload.company,
             pdfBase64,
           }),
         });
@@ -96,7 +108,7 @@ export async function sendFormEmail(payload: EmailPayload): Promise<EmailResult>
     // Manejar errores HTTP
     if (!response.ok) {
       let errorMessage = `Error HTTP ${response.status}`;
-      
+
       try {
         const errorData = await response.json();
         errorMessage = errorData.message || errorMessage;
@@ -113,7 +125,7 @@ export async function sendFormEmail(payload: EmailPayload): Promise<EmailResult>
 
     // Parsear respuesta exitosa
     const result = await response.json();
-    
+
     console.log('[EmailService] ✅ Correo enviado exitosamente');
 
     return {
