@@ -27,6 +27,6 @@
     "api",
     "**/*.ts",
     "**/*.tsx"
-  ],
+, "emails"  ],
   "exclude": ["node_modules", "dist"]
 }
