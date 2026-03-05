@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { LockKeyholeIcon, ShieldCheckIcon, AlertCircleIcon, XIcon } from 'lucide-react';
-import { validateAccessCode } from '@utils/accessService';
+import { validateAccessCode, getRemainingUses } from '@utils/accessService';
 
 interface Props {
     onAccessGranted: () => void;
@@ -12,6 +12,7 @@ export function AccessCodeScreen({ onAccessGranted, onClose }: Props) {
     const [code, setCode] = useState('');
     const [error, setError] = useState('');
     const [isValidating, setIsValidating] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -28,10 +29,16 @@ export function AccessCodeScreen({ onAccessGranted, onClose }: Props) {
             const result = await validateAccessCode(code.trim());
 
             if (result.success) {
+                // Obtener usos restantes y mostrar mensaje
+                const remaining = getRemainingUses();
+                if (remaining !== null) {
+                    setSuccessMessage(`✅ Acceso concedido. Te quedan ${remaining} ${remaining === 1 ? 'uso' : 'usos'}.`);
+                }
+
                 // Pequeña pausa para mostrar el éxito
                 setTimeout(() => {
                     onAccessGranted();
-                }, 500);
+                }, 1500);
             } else {
                 setError(result.message || 'Código de acceso inválido');
             }
@@ -129,6 +136,17 @@ export function AccessCodeScreen({ onAccessGranted, onClose }: Props) {
                                     >
                                         <AlertCircleIcon size={16} />
                                         <span>{error}</span>
+                                    </motion.div>
+                                )}
+
+                                {successMessage && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="mt-2 flex items-center gap-2 text-green-600 text-sm font-medium"
+                                    >
+                                        <ShieldCheckIcon size={16} />
+                                        <span>{successMessage}</span>
                                     </motion.div>
                                 )}
                             </div>

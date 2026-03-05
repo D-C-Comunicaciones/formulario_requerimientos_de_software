@@ -1,10 +1,11 @@
 /**
- * Configuración centralizada de variables de entorno
+ * Configuración centralizada de variables de entorno (FRONTEND)
  * Arquitectura Serverless con Resend
  * 
  * IMPORTANTE:
  * - Variables VITE_* son públicas (expuestas al frontend)
- * - Variables sin VITE_* son privadas (solo serverless functions)
+ * - Se usa import.meta.env (NO process.env)
+ * - Variables sin VITE_* NO son accesibles aquí (solo en serverless functions)
  * - NO hardcodear URLs ni credenciales
  * - Solo cambiar .env al desplegar, NO este archivo
  */
@@ -49,11 +50,11 @@ export function getApiUrl(endpoint: string): string {
  */
 export function validateEnv() {
     const warnings: string[] = []
-    
+
     if (!env.appUrl || env.appUrl === window.location.origin) {
         warnings.push('VITE_APP_URL no configurada, usando URL actual')
     }
-    
+
     if (warnings.length > 0 && env.isDevelopment) {
         console.warn(
             '⚠️  Advertencias de configuración:\n' +

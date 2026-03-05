@@ -2,9 +2,10 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Resend } from 'resend';
 import { buildAdminEmailHtml, buildClientEmailHtml } from './emailTemplates.js';
 import { verifyToken } from './validate-access.js';
+import { serverEnv, getAllowedOrigins } from './config.js';
 
 // Inicializar Resend
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(serverEnv.resendApiKey);
 
 // ─────────────────────────────────────────────────────
 // RATE LIMITING (en memoria - básico)
@@ -58,6 +59,38 @@ setInterval(() => {
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_PDF_SIZE = 10 * 1024 * 1024; // 10 MB en bytes (base64 ~33% más grande)
 
+// ─────────────────────────────────────────────────────
+// VALIDACIÓN DE ORIGEN (CORS)
+// ─────────────────────────────────────────────────────
+
+function isAllowedOrigin(req: VercelRequest): boolean {
+  const origin = req.headers.origin || req.headers.referer;
+
+  // En desarrollo, permitir localhost
+  if (serverEnv.isDevelopment) {
+    return true;
+  }
+
+  // Obtener orígenes permitidos desde la configuración centralizada
+  const allowedOrigins = getAllowedOrigins();
+
+  // Si no hay origen (llamada directa desde servidor/Postman), rechazar
+  if (!origin) {
+    console.log('⚠️ Solicitud sin header origin/referer');
+    return false;
+  }
+
+  // Verificar si el origen está en la lista permitida
+  const isAllowed = allowedOrigins.some(allowed => origin.startsWith(allowed));
+
+  if (!isAllowed) {
+    console.log(`🚫 Origen no permitido: ${origin}`);
+    console.log(`   Orígenes permitidos: ${allowedOrigins.join(', ')}`);
+  }
+
+  return isAllowed;
+}
+
 function validateEmail(email: string): boolean {
   return EMAIL_REGEX.test(email);
 }
@@ -82,6 +115,14 @@ export default async function handler(
     return res.status(405).json({
       success: false,
       message: 'Método no permitido. Usa POST.',
+    });
+  }
+
+  // Validar origen de la petición
+  if (!isAllowedOrigin(req)) {
+    return res.status(403).json({
+      success: false,
+      message: 'Acceso denegado: origen no autorizado',
     });
   }
 
@@ -211,7 +252,7 @@ export default async function handler(
     }
 
     // ─── VALIDAR VARIABLES DE ENTORNO ───
-    if (!process.env.RESEND_API_KEY) {
+    if (!serverEnv.resendApiKey) {
       console.error('❌ RESEND_API_KEY no está configurada');
       return res.status(500).json({
         success: false,
@@ -219,9 +260,9 @@ export default async function handler(
       });
     }
 
-    const senderEmail = process.env.SENDER_EMAIL || 'onboarding@resend.dev';
-    const senderName = process.env.SENDER_NAME || 'Formulario de Requerimientos de Software';
-    const adminEmail = process.env.ADMIN_EMAIL;
+    const senderEmail = serverEnv.senderEmail;
+    const senderName = serverEnv.senderName;
+    const adminEmail = serverEnv.adminEmail;
 
     // ─── PREPARAR FECHA EN HORARIO DE COLOMBIA ───
     const now = new Date();

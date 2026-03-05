@@ -4,12 +4,14 @@
 
 const ACCESS_TOKEN_KEY = 'form_access_token';
 const ACCESS_TOKEN_EXPIRY_KEY = 'form_access_expiry';
+const ACCESS_REMAINING_USES_KEY = 'form_access_remaining_uses';
 
 export interface AccessValidationResult {
     success: boolean;
     message?: string;
     token?: string;
     expiresIn?: number;
+    remainingUses?: number;
 }
 
 /**
@@ -43,10 +45,16 @@ export async function validateAccessCode(code: string): Promise<AccessValidation
             const expiryTime = Date.now() + (data.expiresIn * 1000);
             sessionStorage.setItem(ACCESS_TOKEN_EXPIRY_KEY, expiryTime.toString());
 
+            // Guardar usos restantes si están disponibles
+            if (typeof data.remainingUses === 'number') {
+                sessionStorage.setItem(ACCESS_REMAINING_USES_KEY, data.remainingUses.toString());
+            }
+
             return {
                 success: true,
                 token: data.token,
                 expiresIn: data.expiresIn,
+                remainingUses: data.remainingUses,
             };
         }
 
@@ -91,9 +99,18 @@ export function hasValidAccess(): boolean {
 }
 
 /**
- * Limpia el token de acceso
+ * Obtiene los usos restantes del código de acceso
+ */
+export function getRemainingUses(): number | null {
+    const remaining = sessionStorage.getItem(ACCESS_REMAINING_USES_KEY);
+    return remaining !== null ? parseInt(remaining) : null;
+}
+
+/**
+ * Limpia el token de acceso y datos relacionados
  */
 export function clearAccessToken(): void {
     sessionStorage.removeItem(ACCESS_TOKEN_KEY);
     sessionStorage.removeItem(ACCESS_TOKEN_EXPIRY_KEY);
+    sessionStorage.removeItem(ACCESS_REMAINING_USES_KEY);
 }

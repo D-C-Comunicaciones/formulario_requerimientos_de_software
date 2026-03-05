@@ -1,12 +1,13 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createHmac } from 'crypto';
 import { validateCode, recordCodeUsage, getCodeUsageInfo } from './access-codes.js';
+import { serverEnv, getAllowedOrigins } from './config.js';
 
 // ─────────────────────────────────────────────────────
 // Generar y validar tokens JWT simples
 // ─────────────────────────────────────────────────────
 
-const SECRET_KEY = process.env.JWT_SECRET || 'default-secret-key-change-in-production';
+const SECRET_KEY = serverEnv.jwtSecret;
 
 interface TokenPayload {
     exp: number; // Timestamp de expiración
@@ -69,6 +70,38 @@ export function verifyToken(token: string): boolean {
 }
 
 // ─────────────────────────────────────────────────────
+// Validación de origen (CORS)
+// ─────────────────────────────────────────────────────
+
+function isAllowedOrigin(req: VercelRequest): boolean {
+    const origin = req.headers.origin || req.headers.referer;
+
+    // En desarrollo, permitir localhost
+    if (serverEnv.isDevelopment) {
+        return true;
+    }
+
+    // Obtener orígenes permitidos desde la configuración centralizada
+    const allowedOrigins = getAllowedOrigins();
+
+    // Si no hay origen (llamada directa desde servidor/Postman), rechazar
+    if (!origin) {
+        console.log('⚠️ Solicitud sin header origin/referer');
+        return false;
+    }
+
+    // Verificar si el origen está en la lista permitida
+    const isAllowed = allowedOrigins.some(allowed => origin.startsWith(allowed));
+
+    if (!isAllowed) {
+        console.log(`🚫 Origen no permitido: ${origin}`);
+        console.log(`   Orígenes permitidos: ${allowedOrigins.join(', ')}`);
+    }
+
+    return isAllowed;
+}
+
+// ─────────────────────────────────────────────────────
 // Handler de validación de código de acceso
 // ─────────────────────────────────────────────────────
 
@@ -81,6 +114,14 @@ export default async function handler(
         return res.status(405).json({
             success: false,
             message: 'Método no permitido',
+        });
+    }
+
+    // Validar origen de la petición
+    if (!isAllowedOrigin(req)) {
+        return res.status(403).json({
+            success: false,
+            message: 'Acceso denegado: origen no autorizado',
         });
     }
 
@@ -108,7 +149,7 @@ export default async function handler(
         // Registrar el uso del código
         recordCodeUsage(code);
 
-        // Obtener información de uso para logs
+        // Obtener información de uso para logs y respuesta
         const usageInfo = getCodeUsageInfo(code);
         if (usageInfo) {
             console.log(`✅ Acceso concedido. Código: ${code} - Usos: ${usageInfo.uses}/${usageInfo.maxUses} (Quedan: ${usageInfo.remaining})`);
@@ -121,6 +162,7 @@ export default async function handler(
             success: true,
             token,
             expiresIn: 24 * 60 * 60, // 24 horas en segundos
+            remainingUses: usageInfo?.remaining || 0, // Incluir usos restantes
         });
 
     } catch (error) {
