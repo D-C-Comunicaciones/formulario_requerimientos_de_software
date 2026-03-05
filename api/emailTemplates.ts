@@ -1,14 +1,14 @@
 function esc(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/\"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+    return value
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 }
 
 function baseLayout(preview: string, content: string): string {
-  return `
+    return `
 <!doctype html>
 <html lang="es">
   <head>
@@ -32,12 +32,12 @@ function baseLayout(preview: string, content: string): string {
 }
 
 export function buildClientEmailHtml(clientName: string): string {
-  const safeClientName = esc(clientName || 'Cliente');
-  const year = new Date().getFullYear();
+    const safeClientName = esc(clientName || 'Cliente');
+    const year = new Date().getFullYear();
 
-  return baseLayout(
-    'Hemos recibido tu formulario de requerimientos de software',
-    `
+    return baseLayout(
+        'Hemos recibido tu formulario de requerimientos de software',
+        `
       <tr>
         <td style="background:#4F46E5;padding:32px 24px;text-align:center;">
           <h1 style="margin:0;color:#ffffff;font-size:28px;line-height:1.2;">✅ Formulario Recibido</h1>
@@ -65,18 +65,18 @@ export function buildClientEmailHtml(clientName: string): string {
         </td>
       </tr>
     `,
-  );
+    );
 }
 
 export function buildAdminEmailHtml(clientName: string, clientEmail: string, submittedAt: string): string {
-  const safeClientName = esc(clientName || 'No especificado');
-  const safeClientEmail = esc(clientEmail || 'No especificado');
-  const safeSubmittedAt = esc(submittedAt || 'No especificado');
-  const year = new Date().getFullYear();
+    const safeClientName = esc(clientName || 'No especificado');
+    const safeClientEmail = esc(clientEmail || 'No especificado');
+    const safeSubmittedAt = esc(submittedAt || 'No especificado');
+    const year = new Date().getFullYear();
 
-  return baseLayout(
-    `Nuevo formulario recibido de ${safeClientName}`,
-    `
+    return baseLayout(
+        `Nuevo formulario recibido de ${safeClientName}`,
+        `
       <tr>
         <td style="background:#059669;padding:32px 24px;text-align:center;">
           <h1 style="margin:0;color:#ffffff;font-size:28px;line-height:1.2;">📋 Nuevo Formulario Recibido</h1>
@@ -118,5 +118,5 @@ export function buildAdminEmailHtml(clientName: string, clientEmail: string, sub
         </td>
       </tr>
     `,
-  );
+    );
 }

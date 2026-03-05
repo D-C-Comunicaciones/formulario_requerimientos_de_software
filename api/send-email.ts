@@ -98,11 +98,34 @@ export default async function handler(
       });
     }
 
+    // Verificar que el body existe
+    if (!req.body || typeof req.body !== 'object') {
+      console.error('❌ Body no válido:', req.body);
+      return res.status(400).json({
+        success: false,
+        message: 'Datos de solicitud inválidos',
+      });
+    }
+
     // Extraer datos del body
     const { clientEmail, clientName, pdfBase64 } = req.body;
+    
+    // Log para debug (sin datos sensibles)
+    console.log('📧 Datos recibidos:', {
+      hasEmail: !!clientEmail,
+      emailLength: clientEmail?.length || 0,
+      hasName: !!clientName,
+      hasPDF: !!pdfBase64,
+      pdfLength: pdfBase64?.length || 0,
+    });
 
     // ─── VALIDAR DATOS REQUERIDOS ───
     if (!clientEmail || !clientName || !pdfBase64) {
+      console.error('❌ Datos faltantes:', {
+        hasEmail: !!clientEmail,
+        hasName: !!clientName,
+        hasPDF: !!pdfBase64,
+      });
       return res.status(400).json({
         success: false,
         message: 'Faltan datos requeridos: clientEmail, clientName, pdfBase64',
@@ -115,19 +138,41 @@ export default async function handler(
       typeof clientName !== 'string' ||
       typeof pdfBase64 !== 'string'
     ) {
+      console.error('❌ Tipos inválidos:', {
+        emailType: typeof clientEmail,
+        nameType: typeof clientName,
+        pdfType: typeof pdfBase64,
+      });
       return res.status(400).json({
         success: false,
         message: 'Tipos de datos inválidos',
       });
     }
 
+    // ─── SANITIZAR STRINGS ───
+    const trimmedEmail = clientEmail.trim();
+    const trimmedName = clientName.trim();
+
+    // Validar que no estén vacíos después de trim
+    if (!trimmedEmail || !trimmedName) {
+      console.error('❌ Datos vacíos después de trim');
+      return res.status(400).json({
+        success: false,
+        message: 'Los datos no pueden estar vacíos',
+      });
+    }
+
     // ─── VALIDAR EMAIL ───
-    if (!validateEmail(clientEmail)) {
+    if (!validateEmail(trimmedEmail)) {
+      console.error('❌ Email inválido recibido:', trimmedEmail);
       return res.status(400).json({
         success: false,
         message: 'El formato del email es inválido',
       });
     }
+
+    // ─── SANITIZAR EMAIL ───
+    const sanitizedEmail = trimmedEmail.toLowerCase();
 
     // ─── VALIDAR TAMAÑO DEL PDF ───
     const pdfSize = estimateBase64Size(pdfBase64);
@@ -139,7 +184,7 @@ export default async function handler(
     }
 
     // ─── VALIDAR LONGITUD DE NOMBRE ───
-    if (clientName.length > 200) {
+    if (trimmedName.length > 200) {
       return res.status(400).json({
         success: false,
         message: 'El nombre es demasiado largo',
@@ -173,18 +218,26 @@ export default async function handler(
     const cleanBase64 = pdfBase64.replace(/^data:.*?;base64,/, '');
 
     // ─── RENDERIZAR EMAILS ───
-    const clientEmailHtml = buildClientEmailHtml(clientName);
+    const clientEmailHtml = buildClientEmailHtml(trimmedName);
 
     const adminEmailHtml = buildAdminEmailHtml(
-      clientName,
-      clientEmail,
+      trimmedName,
+      sanitizedEmail,
       submittedAt,
     );
+
+    // Log antes de enviar (sin datos sensibles completos)
+    console.log('📤 Preparando envío:', {
+      to: `${sanitizedEmail.substring(0, 3)}***@***`,
+      name: trimmedName.substring(0, 10),
+      pdfSize: `${(cleanBase64.length / 1024).toFixed(2)} KB`,
+      from: `${senderName} <${senderEmail}>`,
+    });
 
     // ─── ENVIAR EMAIL AL CLIENTE ───
     const clientEmailResult = await resend.emails.send({
       from: `${senderName} <${senderEmail}>`,
-      to: clientEmail,
+      to: sanitizedEmail,
       subject: '✅ Formulario de Requerimientos Recibido',
       html: clientEmailHtml,
       attachments: [
@@ -205,7 +258,7 @@ export default async function handler(
       const adminEmailResult = await resend.emails.send({
         from: `${senderName} <${senderEmail}>`,
         to: adminEmail,
-        subject: `📋 Nuevo formulario de ${clientName}`,
+        subject: `📋 Nuevo formulario de ${trimmedName}`,
         html: adminEmailHtml,
         attachments: [
           {
