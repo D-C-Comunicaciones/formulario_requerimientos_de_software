@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Resend } from 'resend';
-import { buildAdminEmailHtml, buildClientEmailHtml } from '../utils/emailTemplates';
+import { buildAdminEmailHtml, buildClientEmailHtml } from '../src/utils/emailTemplates';
 
 // Inicializar Resend
 const resend = new Resend(process.env.RESEND_API_KEY);
