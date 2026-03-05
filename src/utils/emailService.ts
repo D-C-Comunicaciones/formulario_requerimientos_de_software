@@ -66,7 +66,7 @@ export async function sendFormEmail(payload: EmailPayload): Promise<EmailResult>
     // Construir la URL del endpoint serverless
     const endpoint = getApiUrl(env.apiEndpoint);
 
-    console.log('[EmailService] Enviando correo a:', endpoint);
+    // console.log('[EmailService] Enviando correo a:', endpoint);
 
     // Realizar la petición al endpoint serverless
     let response = await fetch(endpoint, {
@@ -126,7 +126,7 @@ export async function sendFormEmail(payload: EmailPayload): Promise<EmailResult>
     // Parsear respuesta exitosa
     const result = await response.json();
 
-    console.log('[EmailService] ✅ Correo enviado exitosamente');
+    // console.log('[EmailService] ✅ Correo enviado exitosamente');
 
     return {
       success: true,
