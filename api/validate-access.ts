@@ -78,15 +78,21 @@ function isAllowedOrigin(req: VercelRequest): boolean {
 
     // En desarrollo, permitir localhost
     if (serverEnv.isDevelopment) {
+        console.log(`✅ Modo desarrollo - origen permitido: ${origin || 'sin origen'}`);
         return true;
     }
 
     // Obtener orígenes permitidos desde la configuración centralizada
     const allowedOrigins = getAllowedOrigins();
 
+    // Log de configuración para debugging
+    console.log('🔍 Validación de origen:');
+    console.log(`   Origen recibido: ${origin || 'SIN ORIGEN'}`);
+    console.log(`   Orígenes permitidos: ${allowedOrigins.length > 0 ? allowedOrigins.join(', ') : 'NINGUNO CONFIGURADO'}`);
+
     // Si no hay origen (llamada directa desde servidor/Postman), rechazar
     if (!origin) {
-        console.log('⚠️ Solicitud sin header origin/referer');
+        console.log('⚠️ RECHAZADO: Solicitud sin header origin/referer');
         return false;
     }
 
@@ -94,8 +100,9 @@ function isAllowedOrigin(req: VercelRequest): boolean {
     const isAllowed = allowedOrigins.some(allowed => origin.startsWith(allowed));
 
     if (!isAllowed) {
-        console.log(`🚫 Origen no permitido: ${origin}`);
-        console.log(`   Orígenes permitidos: ${allowedOrigins.join(', ')}`);
+        console.log(`🚫 RECHAZADO: Origen "${origin}" no está en la lista permitida`);
+    } else {
+        console.log(`✅ PERMITIDO: Origen "${origin}" está autorizado`);
     }
 
     return isAllowed;

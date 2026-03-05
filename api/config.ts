@@ -22,7 +22,8 @@ export const serverEnv = {
     adminEmail: process.env.ADMIN_EMAIL,
 
     // App Configuration
-    appUrl: process.env.APP_URL || (process.env.APP_URL ? `https://${process.env.APP_URL}` : null),
+    appUrl: process.env.APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null),
+    vercelUrl: process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
 
     // Environment
     nodeEnv: process.env.NODE_ENV || 'production',
@@ -35,7 +36,8 @@ export const serverEnv = {
  */
 export function getAllowedOrigins(): string[] {
     const origins: (string | null)[] = [
-        serverEnv.appUrl      // URL de Vercel (automática)
+        serverEnv.appUrl,          // URL personalizada (APP_URL)
+        serverEnv.vercelUrl,       // URL de Vercel (automática)
     ];
 
     // Filtrar nulls y retornar array limpio
