@@ -125,14 +125,13 @@ export default async function handler(
     });
   }
 
-  // VALIDACIÓN DE ORIGEN TEMPORALMENTE DESHABILITADA
-  // TODO: Habilitar cuando APP_URL esté configurada en Vercel
-  // if (!isAllowedOrigin(req)) {
-  //   return res.status(403).json({
-  //     success: false,
-  //     message: 'Acceso denegado: origen no autorizado',
-  //   });
-  // }
+  // Validar origen de la petición
+  if (!isAllowedOrigin(req)) {
+    return res.status(403).json({
+      success: false,
+      message: 'Acceso denegado: origen no autorizado',
+    });
+  }
 
   try {
     // Obtener IP del cliente
