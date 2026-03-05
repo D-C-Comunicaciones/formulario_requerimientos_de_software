@@ -1,8 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Resend } from 'resend';
-import { render } from '@react-email/render';
-import ClientEmail from '../src/emails/ClientEmail'
-import AdminEmail from '../src/emails/AdminEmail'
+import { buildAdminEmailHtml, buildClientEmailHtml } from './emailTemplates';
 
 // Inicializar Resend
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -175,16 +173,12 @@ export default async function handler(
     const cleanBase64 = pdfBase64.replace(/^data:.*?;base64,/, '');
 
     // ─── RENDERIZAR EMAILS ───
-    const clientEmailHtml = await render(
-      ClientEmail({ clientName })
-    );
+    const clientEmailHtml = buildClientEmailHtml(clientName);
 
-    const adminEmailHtml = await render(
-      AdminEmail({
-        clientName,
-        clientEmail,
-        submittedAt,
-      })
+    const adminEmailHtml = buildAdminEmailHtml(
+      clientName,
+      clientEmail,
+      submittedAt,
     );
 
     // ─── ENVIAR EMAIL AL CLIENTE ───

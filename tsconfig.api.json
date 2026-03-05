@@ -21,6 +21,6 @@
       "@styles/*": ["./src/styles/*"]
     }
   },
-  "include": ["api/**/*", "src/app/components/emails/**/*"],
+  "include": ["api/**/*"],
   "exclude": ["node_modules", "dist"]
 }
