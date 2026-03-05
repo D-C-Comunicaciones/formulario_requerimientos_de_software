@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Resend } from 'resend';
-import { buildAdminEmailHtml, buildClientEmailHtml } from './emailTemplates.js';
+import { buildAdminEmailHtml, buildClientEmailHtml } from '../utils/emailTemplates';
 
 // Inicializar Resend
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -86,9 +86,9 @@ export default async function handler(
 
   try {
     // Obtener IP del cliente
-    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || 
-               (req.headers['x-real-ip'] as string) || 
-               'unknown';
+    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
+      (req.headers['x-real-ip'] as string) ||
+      'unknown';
 
     // Verificar rate limit
     if (!checkRateLimit(ip)) {
