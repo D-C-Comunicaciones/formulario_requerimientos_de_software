@@ -108,7 +108,7 @@ export default function App() {
       <>
         <WelcomeScreen onStart={next} />
         {showAccessModal && (
-          <AccessCodeScreen 
+          <AccessCodeScreen
             onAccessGranted={handleAccessGranted}
             onClose={() => setShowAccessModal(false)}
           />
