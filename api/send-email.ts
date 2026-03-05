@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Resend } from 'resend';
 import { render } from '@react-email/render';
-import ClientEmail from '../src/emails/ClientEmail.js'
-import AdminEmail from '../src/emails/AdminEmail.js'
+import ClientEmail from '../src/emails/ClientEmail'
+import AdminEmail from '../src/emails/AdminEmail'
 
 // Inicializar Resend
 const resend = new Resend(process.env.RESEND_API_KEY);
