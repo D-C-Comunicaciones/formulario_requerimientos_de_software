@@ -41,7 +41,7 @@ export function buildClientEmailHtml(clientName: string): string {
         `
       <tr>
         <td style="background:#ffffff;padding:24px 24px 16px 24px;text-align:center;border-bottom:1px solid #e5e7eb;">
-          <img src="${logoUrl}" alt="D&C Comunicaciones" style="max-width:200px;height:auto;" />
+          <img src="${logoUrl}" alt="D&C IDEM COMUNICACIONES S.A.S." style="max-width:200px;height:auto;" />
         </td>
       </tr>
       <tr>
@@ -67,7 +67,7 @@ export function buildClientEmailHtml(clientName: string): string {
       <tr>
         <td style="background:#f9fafb;padding:20px 24px;text-align:center;border-top:1px solid #e5e7eb;color:#6b7280;font-size:13px;line-height:1.5;">
           <p style="margin:0 0 4px 0;">Este es un correo automático, por favor no respondas a este mensaje.</p>
-          <p style="margin:0;">© ${year} D&C Comunicaciones S.A.S. Todos los derechos reservados.</p>
+          <p style="margin:0;">© ${year} D&C IDEM COMUNICACIONES S.A.S. S.A.S. Todos los derechos reservados.</p>
         </td>
       </tr>
     `,
@@ -86,7 +86,7 @@ export function buildAdminEmailHtml(clientName: string, clientEmail: string, sub
         `
       <tr>
         <td style="background:#ffffff;padding:24px 24px 16px 24px;text-align:center;border-bottom:1px solid #e5e7eb;">
-          <img src="${logoUrl}" alt="D&C Comunicaciones" style="max-width:200px;height:auto;" />
+          <img src="${logoUrl}" alt="D&C IDEM COMUNICACIONES S.A.S." style="max-width:200px;height:auto;" />
         </td>
       </tr>
       <tr>
@@ -126,7 +126,7 @@ export function buildAdminEmailHtml(clientName: string, clientEmail: string, sub
       <tr>
         <td style="background:#f9fafb;padding:20px 24px;text-align:center;border-top:1px solid #e5e7eb;color:#6b7280;font-size:13px;line-height:1.5;">
           <p style="margin:0 0 4px 0;">Sistema automatizado de formularios</p>
-          <p style="margin:0;">© ${year} D&C Comunicaciones S.A.S.</p>
+          <p style="margin:0;">© ${year} D&C IDEM COMUNICACIONES S.A.S. S.A.S.</p>
         </td>
       </tr>
     `,
