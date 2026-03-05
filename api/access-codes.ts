@@ -21,9 +21,9 @@ export interface AccessCode {
  */
 export const ACCESS_CODES: AccessCode[] = [
     {
-        code: 'TUVACUNA2026',
+        code: 'TUVACUNA.CO',
         maxUses: 3,
-        description: 'Código de demostración',
+        description: 'Código de Acceso para Tuvacuna.co - Uso limitado a 3',
         active: true,
     }
 ];

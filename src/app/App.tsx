@@ -25,6 +25,7 @@ const TOTAL_STEPS = 8;
 
 export default function App() {
   const [hasAccess, setHasAccess] = useState(hasValidAccess());
+  const [showAccessModal, setShowAccessModal] = useState(false);
   const [currentStep, setCurrentStep] = useState(0); // 0=welcome, 1-8=form, 9=confirmation
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [isLoading, setIsLoading] = useState(false);
@@ -34,9 +35,23 @@ export default function App() {
   const update = (updates: Partial<FormData>) =>
     setFormData(prev => ({ ...prev, ...updates }));
 
-  const next = () => setCurrentStep(s => s + 1);
+  const next = () => {
+    // Si está en el WelcomeScreen (paso 0) y no tiene acceso, mostrar modal
+    if (currentStep === 0 && !hasAccess) {
+      setShowAccessModal(true);
+      return;
+    }
+    setCurrentStep(s => s + 1);
+  };
+
   const back = () => setCurrentStep(s => Math.max(0, s - 1));
   const goTo = (step: number) => setCurrentStep(step);
+
+  const handleAccessGranted = () => {
+    setHasAccess(true);
+    setShowAccessModal(false);
+    setCurrentStep(1); // Ir al primer paso del formulario
+  };
 
   const handleSubmit = async () => {
     setIsLoading(true);
@@ -87,21 +102,17 @@ export default function App() {
     setEmailStatus('pending');
   };
 
-  /* ── ACCESS CONTROL ── */
-  if (!hasAccess) {
-    return (
-      <>
-        <AccessCodeScreen onAccessGranted={() => setHasAccess(true)} />
-        <Toaster position="bottom-center" richColors />
-      </>
-    );
-  }
-
   /* ── WELCOME ── */
   if (currentStep === 0) {
     return (
       <>
         <WelcomeScreen onStart={next} />
+        {showAccessModal && (
+          <AccessCodeScreen 
+            onAccessGranted={handleAccessGranted}
+            onClose={() => setShowAccessModal(false)}
+          />
+        )}
         <Toaster position="bottom-center" richColors />
       </>
     );

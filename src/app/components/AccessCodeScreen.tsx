@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { motion } from 'motion/react';
-import { LockKeyholeIcon, ShieldCheckIcon, AlertCircleIcon } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { LockKeyholeIcon, ShieldCheckIcon, AlertCircleIcon, XIcon } from 'lucide-react';
 import { validateAccessCode } from '@utils/accessService';
 
 interface Props {
     onAccessGranted: () => void;
+    onClose?: () => void;
 }
 
-export function AccessCodeScreen({ onAccessGranted }: Props) {
+export function AccessCodeScreen({ onAccessGranted, onClose }: Props) {
     const [code, setCode] = useState('');
     const [error, setError] = useState('');
     const [isValidating, setIsValidating] = useState(false);
@@ -42,26 +43,41 @@ export function AccessCodeScreen({ onAccessGranted }: Props) {
     };
 
     return (
-        <div
-            className="min-h-screen flex items-center justify-center p-4"
-            style={{ background: 'linear-gradient(135deg, #0D0D0D 0%, #021e3a 50%, #0D0D0D 100%)' }}
-        >
-            {/* Background decorative blobs */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-3xl" style={{ background: 'rgba(4,77,140,0.18)' }} />
-                <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full blur-3xl" style={{ background: 'rgba(217,164,30,0.12)' }} />
-            </div>
-
+        <AnimatePresence>
             <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="relative max-w-md w-full"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                style={{ 
+                    background: 'rgba(0, 0, 0, 0.85)',
+                    backdropFilter: 'blur(8px)'
+                }}
+                onClick={onClose}
             >
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                    transition={{ duration: 0.3 }}
+                    className="relative max-w-md w-full"
+                    onClick={(e) => e.stopPropagation()}
+                >
                 <div
-                    className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 border border-white/20"
+                    className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 border border-white/20 relative"
                     style={{ boxShadow: '0 25px 50px -12px rgba(4,77,140,0.25)' }}
                 >
+                    {/* Botón cerrar (opcional) */}
+                    {onClose && (
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+                        >
+                            <XIcon size={24} />
+                        </button>
+                    )}
+
                     {/* Header con icono */}
                     <div className="text-center mb-8">
                         <div
@@ -158,12 +174,8 @@ export function AccessCodeScreen({ onAccessGranted }: Props) {
                         </p>
                     </div>
                 </div>
-
-                {/* Footer */}
-                <p className="text-center text-white/60 text-sm mt-6">
-                    ¿No tienes un código de acceso? Contáctanos
-                </p>
             </motion.div>
-        </div>
+        </motion.div>
+        </AnimatePresence>
     );
 }
