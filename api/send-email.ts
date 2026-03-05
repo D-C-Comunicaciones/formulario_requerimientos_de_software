@@ -68,7 +68,7 @@ function isAllowedOrigin(req: VercelRequest): boolean {
 
   // En desarrollo, permitir localhost
   if (serverEnv.isDevelopment) {
-    console.log(`✅ Modo desarrollo - origen permitido: ${origin || 'sin origen'}`);
+    // console.log(`✅ Modo desarrollo - origen permitido: ${origin || 'sin origen'}`);
     return true;
   }
 
@@ -76,13 +76,13 @@ function isAllowedOrigin(req: VercelRequest): boolean {
   const allowedOrigins = getAllowedOrigins();
 
   // Log de configuración para debugging
-  console.log('🔍 Validación de origen:');
-  console.log(`   Origen recibido: ${origin || 'SIN ORIGEN'}`);
-  console.log(`   Orígenes permitidos: ${allowedOrigins.length > 0 ? allowedOrigins.join(', ') : 'NINGUNO CONFIGURADO'}`);
+  // console.log('🔍 Validación de origen:');
+  // console.log(`   Origen recibido: ${origin || 'SIN ORIGEN'}`);
+  // console.log(`   Orígenes permitidos: ${allowedOrigins.length > 0 ? allowedOrigins.join(', ') : 'NINGUNO CONFIGURADO'}`);
 
   // Si no hay origen (llamada directa desde servidor/Postman), rechazar
   if (!origin) {
-    console.log('⚠️ RECHAZADO: Solicitud sin header origin/referer');
+    // console.log('⚠️ RECHAZADO: Solicitud sin header origin/referer');
     return false;
   }
 
@@ -90,9 +90,9 @@ function isAllowedOrigin(req: VercelRequest): boolean {
   const isAllowed = allowedOrigins.some(allowed => origin.startsWith(allowed));
 
   if (!isAllowed) {
-    console.log(`🚫 RECHAZADO: Origen "${origin}" no está en la lista permitida`);
+    // console.log(`🚫 RECHAZADO: Origen "${origin}" no está en la lista permitida`);
   } else {
-    console.log(`✅ PERMITIDO: Origen "${origin}" está autorizado`);
+    // console.log(`✅ PERMITIDO: Origen "${origin}" está autorizado`);
   }
 
   return isAllowed;
@@ -183,13 +183,13 @@ export default async function handler(
     const { clientEmail, clientName, pdfBase64, company } = req.body;
 
     // Log para debug (sin datos sensibles)
-    console.log('📧 Datos recibidos:', {
-      hasEmail: !!clientEmail,
-      emailLength: clientEmail?.length || 0,
-      hasName: !!clientName,
-      hasPDF: !!pdfBase64,
-      pdfLength: pdfBase64?.length || 0,
-    });
+    // console.log('📧 Datos recibidos:', {
+    //   hasEmail: !!clientEmail,
+    //   emailLength: clientEmail?.length || 0,
+    //   hasName: !!clientName,
+    //   hasPDF: !!pdfBase64,
+    //   pdfLength: pdfBase64?.length || 0,
+    // });
 
     // ─── VALIDAR DATOS REQUERIDOS ───
     if (!clientEmail || !clientName || !pdfBase64) {
@@ -315,12 +315,12 @@ export default async function handler(
     );
 
     // Log antes de enviar (sin datos sensibles completos)
-    console.log('📤 Preparando envío:', {
-      to: `${sanitizedEmail.substring(0, 3)}***@***`,
-      name: trimmedName.substring(0, 10),
-      pdfSize: `${(cleanBase64.length / 1024).toFixed(2)} KB`,
-      from: `${senderName} <${senderEmail}>`,
-    });
+    // console.log('📤 Preparando envío:', {
+    //   to: `${sanitizedEmail.substring(0, 3)}***@***`,
+    //   name: trimmedName.substring(0, 10),
+    //   pdfSize: `${(cleanBase64.length / 1024).toFixed(2)} KB`,
+    //   from: `${senderName} <${senderEmail}>`,
+    // });
 
     // ─── ENVIAR EMAIL AL CLIENTE ───
     const clientEmailResult = await resend.emails.send({
